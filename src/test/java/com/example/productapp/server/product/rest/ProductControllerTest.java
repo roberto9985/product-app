@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tools.jackson.databind.ObjectMapper;
 
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,24 +44,21 @@ class ProductControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
         objectMapper = new ObjectMapper();
-
-        sampleProduct = new Product();
-        sampleProduct.setId(1L);
-        sampleProduct.setName("Test product");
+        sampleProduct = new Product(1L,"Test product", "This is a test product", BigDecimal.valueOf(19.99), "TP-001");
     }
 
     @Test
     void shouldReturnCreatedProduct() throws Exception {
-        doReturn(sampleProduct).when(productService).create(any(Product.class));
+        doReturn(sampleProduct).when(productService).create(any());
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(sampleProduct)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(sampleProduct.getId()))
-                .andExpect(jsonPath("$.name").value("Test product"));
+                .andExpect(jsonPath("$.sku").value(sampleProduct.getSku()))
+                .andExpect(jsonPath("$.name").value(sampleProduct.getName()));
 
-        verify(productService, times(1)).create(any(Product.class));
+        verify(productService, times(1)).create(any());
     }
 
 
@@ -72,7 +70,7 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/products")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(sampleProduct.getId()))
+                .andExpect(jsonPath("$[0].sku").value(sampleProduct.getSku()))
                 .andExpect(jsonPath("$[0].name").value(sampleProduct.getName()));
 
         verify(productService, times(1)).getAll();
@@ -85,7 +83,7 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/products/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(sampleProduct.getId()))
+                .andExpect(jsonPath("$.sku").value(sampleProduct.getSku()))
                 .andExpect(jsonPath("$.name").value(sampleProduct.getName()));
 
         verify(productService, times(1)).getById(1L);
