@@ -42,4 +42,24 @@ public class ProductController {
         return ResponseEntity.ok(ProductMapper.productToProductRequestResponse(productService.getById(id)));
     }
 
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        log.info("REST request to delete product with id: {}", id);
+
+        productService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateProduct(
+            @PathVariable Long id,
+            @RequestBody ProductRequestResponse request
+    ) {
+        log.info("REST request to update product with id: {}", id);
+
+        productService.update(id, request);
+        return ResponseEntity.noContent().build();
+    }
+
 }

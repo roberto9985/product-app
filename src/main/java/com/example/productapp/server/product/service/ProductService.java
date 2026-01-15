@@ -4,6 +4,7 @@ import com.example.productapp.server.product.domain.Product;
 import com.example.productapp.server.product.exception.ProductAlreadyExistsException;
 import com.example.productapp.server.product.exception.ProductNotFoundException;
 import com.example.productapp.server.product.repository.ProductRepository;
+import com.example.productapp.server.product.rest.dto.ProductRequestResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +21,7 @@ public class ProductService {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public Product create(Product product) {
-        log.debug("Create product with SKU: {}", product.getSku());
+        log.debug("Creating product with SKU: {}", product.getSku());
 
         if (productRepository.existsBySku(product.getSku())) {
             log.debug("Product with SKU {} already exists, throwing exception", product.getSku());
@@ -58,8 +59,30 @@ public class ProductService {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public void delete(Long id) {
         log.debug("Deleting product with id: {}", id);
+
         productRepository.deleteById(id);
+
         log.debug("Product with id {} deleted successfully", id);
+    }
+
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public void update(Long id, ProductRequestResponse requestResponse) {
+        log.debug("Updating product with id: {}", id);
+
+        Product existingProduct = productRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.debug("Product with id {} not found, throwing exception", id);
+                    return new ProductNotFoundException(id);
+                });
+
+        existingProduct.setName(requestResponse.name());
+        existingProduct.setDescription(requestResponse.description());
+        existingProduct.setPrice(requestResponse.price());
+        existingProduct.setSku(requestResponse.sku());
+
+        productRepository.save(existingProduct);
+        log.debug("Product with id {} updated successfully: {}", id, requestResponse);
     }
 
 }
