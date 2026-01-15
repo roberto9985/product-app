@@ -6,7 +6,10 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "products")
+@Table(
+        name = "products",
+        uniqueConstraints = @UniqueConstraint(columnNames = "sku")
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,5 +25,7 @@ public class Product {
     private String description;
 
     private BigDecimal price;
+
+    private String sku;
 
 }

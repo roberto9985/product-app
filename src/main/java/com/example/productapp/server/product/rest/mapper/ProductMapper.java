@@ -13,7 +13,8 @@ public class ProductMapper {
         return new ProductRequestResponse(
                 entity.getName(),
                 entity.getDescription(),
-                entity.getPrice()
+                entity.getPrice(),
+                entity.getSku()
         );
     }
 
@@ -22,6 +23,7 @@ public class ProductMapper {
         entity.setName(requestResponse.name());
         entity.setDescription(requestResponse.description());
         entity.setPrice(requestResponse.price());
+        entity.setSku(requestResponse.sku());
         return entity;
     }
 
