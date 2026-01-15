@@ -1,6 +1,7 @@
 package com.example.productapp.server.product.rest;
 
-import com.example.productapp.server.product.domain.Product;
+import com.example.productapp.server.product.rest.dto.ProductRequestResponse;
+import com.example.productapp.server.product.rest.mapper.ProductMapper;
 import com.example.productapp.server.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,23 +18,20 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        Product createdProduct = productService.create(product);
-        return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
+    public ResponseEntity<ProductRequestResponse> createProduct(@RequestBody ProductRequestResponse request) {
+        ProductRequestResponse response =
+                ProductMapper.productToProductRequestResponse(productService.create(ProductMapper.productRequestResponseToProduct(request)));
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
-
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productService.getAll();
-        return ResponseEntity.ok(products);
+    public ResponseEntity<List<ProductRequestResponse>> getAllProducts() {
+        return ResponseEntity.ok(ProductMapper.productsToProductRequestResponses(productService.getAll()));
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Product product = productService.getById(id);
-        return ResponseEntity.ok(product);
+    public ResponseEntity<ProductRequestResponse> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(ProductMapper.productToProductRequestResponse(productService.getById(id)));
     }
 
 }
