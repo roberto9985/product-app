@@ -1,5 +1,6 @@
 package com.example.productapp.server.product.domain;
 
+import com.example.productapp.server.user.domain.AppUser;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +26,8 @@ public class Product {
     private String description;
 
     private BigDecimal price;
+
+    private Integer stock;
 
     private String sku;
 

@@ -1,6 +1,8 @@
 package com.example.productapp.server.product.rest;
 
+import com.example.productapp.server.product.rest.dto.ProductCompactWithId;
 import com.example.productapp.server.product.rest.dto.ProductRequestResponse;
+import com.example.productapp.server.product.rest.dto.ProductStockUpdateRequest;
 import com.example.productapp.server.product.rest.mapper.ProductMapper;
 import com.example.productapp.server.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +38,27 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductRequestResponse> getProductById(@PathVariable Long id) {
+        public ResponseEntity<ProductRequestResponse> getProductById(@PathVariable Long id) {
         log.info("REST request for fetching product with id: {}", id);
 
         return ResponseEntity.ok(ProductMapper.productToProductRequestResponse(productService.getById(id)));
+    }
+
+    @GetMapping("/intercom/all")
+    public ResponseEntity<List<ProductCompactWithId>> getAllProducts(@RequestParam List<Long> ids) {
+        log.info("REST request to fetch products with ids: {}", ids);
+
+        List<ProductCompactWithId> products = ProductMapper.productsCompactWithIdToEntities(productService.getProductsByIds(ids));
+        return ResponseEntity.ok(products);
+    }
+
+    @PostMapping("/intercom/decrease-stock")
+    public ResponseEntity<Void> decreaseStock(@RequestBody List<ProductStockUpdateRequest> items) {
+        log.info("REST request to decrease stock and update quantity for products with ids: {}",
+                items.stream().map(ProductStockUpdateRequest::productId).toList());
+
+        productService.decreaseStockAtomic(items);
+        return ResponseEntity.ok().build();
     }
 
 

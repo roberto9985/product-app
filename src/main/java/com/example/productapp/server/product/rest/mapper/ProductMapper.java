@@ -1,6 +1,7 @@
 package com.example.productapp.server.product.rest.mapper;
 
 import com.example.productapp.server.product.domain.Product;
+import com.example.productapp.server.product.rest.dto.ProductCompactWithId;
 import com.example.productapp.server.product.rest.dto.ProductRequestResponse;
 
 import java.util.List;
@@ -14,6 +15,7 @@ public class ProductMapper {
                 entity.getName(),
                 entity.getDescription(),
                 entity.getPrice(),
+                entity.getStock(),
                 entity.getSku()
         );
     }
@@ -24,12 +26,23 @@ public class ProductMapper {
         entity.setDescription(requestResponse.description());
         entity.setPrice(requestResponse.price());
         entity.setSku(requestResponse.sku());
+        entity.setStock(requestResponse.stock());
         return entity;
     }
 
     public static List<ProductRequestResponse> productsToProductRequestResponses(List<Product> products) {
         return products.stream()
                 .map(ProductMapper::productToProductRequestResponse)
+                .toList();
+    }
+
+    public static ProductCompactWithId productCompactWithIdToEntity(Product entity) {
+        return new ProductCompactWithId(entity.getId(), entity.getPrice());
+    }
+
+    public static List<ProductCompactWithId> productsCompactWithIdToEntities(List<Product> products) {
+        return products.stream()
+                .map(ProductMapper::productCompactWithIdToEntity)
                 .toList();
     }
 }

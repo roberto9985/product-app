@@ -1,15 +1,20 @@
 package com.example.productapp.server.product.service;
 
 import com.example.productapp.server.product.domain.Product;
+import com.example.productapp.server.product.exception.InsufficientStockException;
 import com.example.productapp.server.product.exception.ProductAlreadyExistsException;
 import com.example.productapp.server.product.exception.ProductNotFoundException;
 import com.example.productapp.server.product.repository.ProductRepository;
 import com.example.productapp.server.product.rest.dto.ProductRequestResponse;
+import com.example.productapp.server.product.rest.dto.ProductStockUpdateRequest;
+import com.example.productapp.server.user.service.AppUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -18,8 +23,9 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final AppUserService appUserService;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public Product create(Product product) {
         log.debug("Creating product with SKU: {}", product.getSku());
 
@@ -32,7 +38,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
+//    @PreAuthorize("hasRole('ROLE_USER', 'ROLE_ADMIN')")
     public Product getById(Long id) {
         log.debug("Fetching product by id: {}", id);
 
@@ -46,7 +52,7 @@ public class ProductService {
         return product;
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public List<Product> getAll() {
         log.debug("Fetching all products");
 
@@ -56,7 +62,7 @@ public class ProductService {
         return products;
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void delete(Long id) {
         log.debug("Deleting product with id: {}", id);
 
@@ -66,7 +72,8 @@ public class ProductService {
     }
 
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
     public void update(Long id, ProductRequestResponse requestResponse) {
         log.debug("Updating product with id: {}", id);
 
@@ -83,6 +90,31 @@ public class ProductService {
 
         productRepository.save(existingProduct);
         log.debug("Product with id {} updated successfully: {}", id, requestResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Product> getProductsByIds(List<Long> ids) {
+        log.debug("Fetching products by ids: {}", ids);
+
+        return productRepository.findAllById(ids);
+    }
+
+
+    @Transactional
+    public void decreaseStockAtomic(List<ProductStockUpdateRequest> items) {
+        log.debug("Decreasing stock for products with ids: {}", items.stream().map(ProductStockUpdateRequest::productId).toList());
+
+        for (ProductStockUpdateRequest item : items) {
+            Product product = productRepository.findById(item.productId())
+                    .orElseThrow(() -> new ProductNotFoundException(item.productId()));
+
+            if (product.getStock() < item.quantity()) {
+                throw new InsufficientStockException(product.getId(), item.quantity(), product.getStock());
+            }
+
+            product.setStock(product.getStock() - item.quantity());
+            productRepository.save(product);
+        }
     }
 
 }
